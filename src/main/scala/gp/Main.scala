@@ -12,12 +12,12 @@ object Main {
 
     val xa = Transactor.fromDriverManager[IO](
       "org.postgresql.Driver", // driver classname
-      "jdbc:postgresql://localhost:5432/admin", // connect URL (driver-specific)
-      "admin", // user
-      "123" // password
+      "jdbc:postgresql://localhost:5432/postgres", // connect URL (driver-specific)
+      "postgres", // user
+      "henlo" // password
     )
 
-    val simpleSelect = sql"select 42".query[Int].unique.transact(xa)
+    val simpleSelect = sql"select 'Astring'".query[String].unique.transact(xa)
 
     simpleSelect
       .map(num => println(num))
