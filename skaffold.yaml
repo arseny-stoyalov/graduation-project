@@ -1,0 +1,20 @@
+apiVersion: skaffold/v2beta20
+kind: Config
+build:
+  local:
+    useDockerCLI: true
+profiles:
+  - name: res
+    build:
+      artifacts: []
+    deploy:
+      helm:
+        releases:
+          - name: gp-yugabyte
+            namespace: yugabyte
+            chartPath: deployment/gp-stack
+            overrides:
+              gp:
+                enabled: false
+            imageStrategy:
+              helm: {}
