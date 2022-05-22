@@ -11,6 +11,8 @@ import gp.auth.model.AuthModel.UserToken
 import gp.config.JWTConfig
 import gp.users.UsersService
 import io.circe.jawn
+import io.circe.syntax._
+import pdi.jwt.exceptions.JwtExpirationException
 import pdi.jwt.{JwtAlgorithm, JwtCirce, JwtClaim}
 
 import java.time.Instant
@@ -30,14 +32,15 @@ class AuthService[F[_]: Monad](config: JWTConfig, usersService: UsersService[F])
         )
     }
 
-  def getUser(token: JWT): EitherT[F, AuthenticationError, User] = {
+  def getUserFromToken(token: JWT): EitherT[F, AuthenticationError, User] = {
     val userId: Either[AuthenticationError, String] = for {
       claim <- JwtCirce
         .decode(token, config.secretKey, Seq(jwtAlg))
         .toEither
-        .leftMap(_ => AuthenticationError.InvalidToken)
-      expired = claim.expiration.exists(_ > Instant.now().getEpochSecond)
-      _ <- Either.cond(expired, claim, AuthenticationError.ExpiredToken)
+        .leftMap {
+          case _: JwtExpirationException => AuthenticationError.ExpiredToken
+          case _ => AuthenticationError.InvalidToken
+        }
       ut <- jawn.decode[UserToken](claim.content).leftMap(_ => AuthenticationError.InvalidToken)
     } yield ut.userId
 
@@ -50,12 +53,12 @@ class AuthService[F[_]: Monad](config: JWTConfig, usersService: UsersService[F])
   private def toJWT(user: User): String =
     JwtCirce.encode(
       JwtClaim(
-        content = user.id,
+        content = UserToken(user.id).asJson.noSpaces,
         expiration = Some(Instant.now.plusSeconds(config.defaultExpire.toSeconds).getEpochSecond),
         issuedAt = Some(Instant.now.getEpochSecond)
       ),
       config.secretKey,
-      JwtAlgorithm.HS256
+      jwtAlg
     )
 
 }

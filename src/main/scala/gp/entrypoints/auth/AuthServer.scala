@@ -3,47 +3,24 @@ package gp.entrypoints.auth
 import cats.Id
 import cats.effect.{ExitCode, IO, IOApp}
 import gp.auth.AuthService
+import gp.entrypoints.logicScheduler
 import gp.users.UsersService
-import gp.users.model.User
+import gp.utils.catseffect._
 import org.http4s.blaze.server.BlazeServerBuilder
-import tofu.Delay
 import tofu.logging.Logging
 import tofu.syntax.logging._
 
-import java.util.concurrent.ForkJoinPool
-import scala.concurrent.ExecutionContext
+private object AuthServer extends IOApp {
 
-object AuthServer extends IOApp {
+  val config: AuthConfig = AuthConfig()
 
-  //-------------utils--------------
-  implicit val ioDelay: Delay[IO] = new Delay[IO] {
-    override def delay[A](a: => A): IO[A] = IO.delay(a)
-  }
+  val userService = new UsersService.InMemory
+  implicit val authService: AuthService[IO] = new AuthService[IO](config.jwt, userService)
 
-  implicit val ioLogging: Logging.Make[IO] =
-    Logging.Make.plain[IO]
-
-  //--------------------------------
-
-  private lazy val parallelism = math.max(java.lang.Runtime.getRuntime.availableProcessors(), 4)
-
-  private val logicScheduler = ExecutionContext
-    .fromExecutor {
-      new ForkJoinPool(parallelism)
-    }
-
-  private val config = AuthConfig()
+  val controller = new AuthNodeController()
 
   override def run(args: List[String]): IO[ExitCode] = {
-    //todo delete me
-    import com.github.t3hnar.bcrypt._
-
     implicit val ioL: Id[Logging[IO]] = Logging.Make.plain[IO].byName(getClass.getCanonicalName)
-
-    val userService = new UsersService.InMemory
-    implicit val authService: AuthService[IO] = new AuthService[IO](config.jwt, userService)
-
-    val controller = new AuthController()
 
     val server = for {
       started <- IO.delay(System.currentTimeMillis())
@@ -55,7 +32,9 @@ object AuthServer extends IOApp {
         .withHttpApp(controller.routes.orNotFound)
     } yield builder
 
-    server.flatMap(_.resource.use(_ => IO.never)).as(ExitCode.Success)
+    server
+      .flatMap(_.resource.use(_ => IO.never))
+      .as(ExitCode.Success)
       .handleErrorWith { e =>
         errorCause"failed start role process" (e).as(ExitCode.Error)
       }

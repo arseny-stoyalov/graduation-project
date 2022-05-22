@@ -7,6 +7,7 @@ import cats.syntax.semigroupk._
 import gp.auth.AuthService
 import gp.auth.AuthService.JWT
 import gp.users.model.User
+import gp.utils.routing.tags.RouteTag
 import gp.utils.routing.dsl.errors.unauthorized
 import gp.utils.routing.errors.{ApiError, ApiErrorLike}
 import org.http4s.HttpRoutes
@@ -52,7 +53,7 @@ package object dsl {
   class Route[F[_]: Async, I, O](
     ep: Endpoint[Unit, I, ApiError, O, Any],
     logic: Logic[F, I, O],
-    override val rc: RouteClass
+    override val rc: RouteTag
   ) extends RouteBase
       with HasRouteClass {
 
@@ -69,7 +70,7 @@ package object dsl {
   class UserAuthRoute[F[_], I, O](
     ep: Endpoint[Unit, I, Unit, O, Any],
     logic: AuthLogic[F, User, I, O],
-    override val rc: RouteClass
+    override val rc: RouteTag
   )(implicit protected val as: AuthService[F], F: Async[F] with MonadError[F, Throwable])
       extends RouteBase
       with HasRouteClass {
@@ -92,25 +93,12 @@ package object dsl {
       endpoint
         .securityIn(auth.apiKey(header[JWT]("token")))
         .errorOut(oneOf[ApiError](unauthorized))
-        .serverSecurityLogic[User, F](token => as.getUser(token).leftMap(_.asApiError).value)
+        .serverSecurityLogic[User, F](token => as.getUserFromToken(token).leftMap(_.asApiError).value)
 
-  }
-
-  trait RouteClass {
-    def input: EndpointInput[Unit]
-
-    def tags: List[String]
-  }
-
-  object RouteClass {
-    case object Auth extends RouteClass {
-      override val input: EndpointInput[Unit] = "auth"
-      override val tags: List[String] = List("auth")
-    }
   }
 
   trait HasRouteClass {
-    protected def rc: RouteClass
+    protected def rc: RouteTag
   }
 
   object errors {
