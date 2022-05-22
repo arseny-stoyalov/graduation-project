@@ -16,7 +16,6 @@ lazy val Version = new {
   val doobie = "1.0.0-RC1"
 }
 
-
 lazy val scalaDeps = Seq(
   "org.scala-lang" % "scala-compiler" % Version.scala,
   "org.scala-lang" % "scala-reflect" % Version.scala
@@ -45,7 +44,7 @@ lazy val circeDeps = Seq(
 
 lazy val doobieDeps = Seq(
   "org.tpolecat" %% "doobie-core" % Version.doobie,
-"org.tpolecat" %% "doobie-postgres"  % Version.doobie
+  "org.tpolecat" %% "doobie-postgres" % Version.doobie
 )
 
 lazy val monocleDeps = Seq(
@@ -60,6 +59,8 @@ lazy val tapirDeps = Seq(
   "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % Version.tapir,
   "com.softwaremill.sttp.tapir" %% "tapir-openapi-docs" % Version.tapir,
   "com.softwaremill.sttp.tapir" %% "tapir-openapi-circe-yaml" % Version.tapir,
+  "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % Version.tapir,
+  "com.softwaremill.sttp.client3" %% "async-http-client-backend-cats" % "3.6.2",
   "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-http4s" % "0.19.0-M4"
 )
 
@@ -76,6 +77,10 @@ lazy val silencerDeps = Seq(
   "com.github.ghik" % "silencer-lib" % Version.silencer % Provided cross CrossVersion.full
 )
 
+lazy val configDeps = Seq(
+  "com.github.pureconfig" %% "pureconfig" % "0.12.3"
+)
+
 scalaVersion := Version.scala
 
 libraryDependencies ++=
@@ -87,11 +92,14 @@ libraryDependencies ++=
     silencerDeps ++
     doobieDeps ++
     monocleDeps ++
-    tofuDeps) ++
+    tofuDeps ++
+    configDeps) ++
     Seq(
       "org.scalatest" %% "scalatest" % "3.2.9" % "test",
-      "io.scalaland" %% "chimney" % "0.6.1"
-      //      "com.github.fd4s" %% "fs2-kafka" % "2.5.0-M3"
+      "io.scalaland" %% "chimney" % "0.6.1",
+      "com.github.jwt-scala" %% "jwt-circe" % "9.0.5",
+      "com.github.t3hnar" %% "scala-bcrypt" % "4.3.0",
+      "com.github.fd4s" %% "fs2-kafka" % "2.5.0-M3"
     )
 
 lazy val compilerThreads = {
@@ -119,4 +127,3 @@ scalacOptions ++= Seq(
   "-Ybackend-parallelism",
   compilerThreads.toString
 )
-
