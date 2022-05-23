@@ -19,7 +19,7 @@ class AuthController[F[_]](implicit as: AuthService[F], F: Async[F] with MonadEr
 
   private val tag = RouteTag.Auth
 
-  private val testAuthRoute = "debug" ->: {
+  private val testAuth = "debug" ->: {
     val ep =
       endpoint.get
         .in("greet")
@@ -31,7 +31,7 @@ class AuthController[F[_]](implicit as: AuthService[F], F: Async[F] with MonadEr
     new UserAuthRoute[F, Unit, String](ep, logic, tag)
   }
 
-  private val loginRoute = {
+  private val login = {
     val ep =
       endpoint.post
         .in("login")
@@ -47,7 +47,7 @@ class AuthController[F[_]](implicit as: AuthService[F], F: Async[F] with MonadEr
     new Route[F, (String, String), TokenCreatedResponse](ep, logic, tag)
   }
 
-  val routes: Routes[F] = testAuthRoute ~> loginRoute
+  val routes: Routes[F] = testAuth ~> login
 
 }
 

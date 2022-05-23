@@ -5,6 +5,11 @@ yugabyte:
     tag: 2.13.1.0-b112
   storage:
     ephemeral: true
+  authCredentials:
+    ysql:
+      user: "gp_admin"
+      password: "admin"
+      database: "gp_main"
   resource:
     master:
       requests:

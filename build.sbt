@@ -3,8 +3,8 @@ name := "graduation-project"
 version := "0.1"
 
 lazy val Version = new {
-  val scala = "2.13.6"
-  val http4s = "0.23.0"
+  val scala = "2.13.8"
+  val http4s = "0.23.11"
   val cats = new {
     val core = "2.7.0"
     val effect = "3.3.11"
@@ -12,8 +12,8 @@ lazy val Version = new {
   val monocle = "2.1.0"
   val circe = "0.14.1"
   val tapir = "1.0.0-M6"
-  val silencer = "1.7.7"
-  val doobie = "1.0.0-RC1"
+  val tofu = "0.10.8"
+  val skunk = "0.3.1"
 }
 
 lazy val scalaDeps = Seq(
@@ -42,9 +42,8 @@ lazy val circeDeps = Seq(
   "io.circe" %% "circe-derivation" % "0.13.0-M4"
 )
 
-lazy val doobieDeps = Seq(
-  "org.tpolecat" %% "doobie-core" % Version.doobie,
-  "org.tpolecat" %% "doobie-postgres" % Version.doobie
+lazy val skunkDeps = Seq(
+  "org.tpolecat" %% "skunk-core" % Version.skunk
 )
 
 lazy val monocleDeps = Seq(
@@ -65,20 +64,13 @@ lazy val tapirDeps = Seq(
 )
 
 lazy val tofuDeps = Seq(
-  "tf.tofu" %% "tofu-kernel" % "0.10.7",
-  "tf.tofu" %% "tofu-logging" % "0.10.7",
-  "tf.tofu" %% "tofu-logging-derivation" % "0.10.7"
-)
-
-lazy val silencerDeps = Seq(
-  compilerPlugin(
-    "com.github.ghik" % "silencer-plugin" % Version.silencer cross CrossVersion.full
-  ),
-  "com.github.ghik" % "silencer-lib" % Version.silencer % Provided cross CrossVersion.full
+  "tf.tofu" %% "tofu-kernel" % Version.tofu,
+  "tf.tofu" %% "tofu-logging" % Version.tofu,
+  "tf.tofu" %% "tofu-logging-derivation" % Version.tofu
 )
 
 lazy val configDeps = Seq(
-  "com.github.pureconfig" %% "pureconfig" % "0.12.3"
+  "com.github.pureconfig" %% "pureconfig" % "0.17.1"
 )
 
 scalaVersion := Version.scala
@@ -89,13 +81,12 @@ libraryDependencies ++=
     catsDeps ++
     circeDeps ++
     tapirDeps ++
-    silencerDeps ++
-    doobieDeps ++
+    skunkDeps ++
     monocleDeps ++
     tofuDeps ++
     configDeps) ++
     Seq(
-      "org.scalatest" %% "scalatest" % "3.2.9" % "test",
+      "org.scalatest" %% "scalatest" % "3.2.12" % "test",
       "io.scalaland" %% "chimney" % "0.6.1",
       "com.github.jwt-scala" %% "jwt-circe" % "9.0.5",
       "com.github.t3hnar" %% "scala-bcrypt" % "4.3.0",

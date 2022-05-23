@@ -12,7 +12,7 @@ import tofu.syntax.logging.LoggingInterpolator
 
 private object AuthServer extends IOApp {
 
-  val config: AuthConfig = AuthConfig()
+  val config: AuthNodeConfig = AuthNodeConfig()
 
   val userService = new UsersService.InMemory
 
@@ -23,7 +23,8 @@ private object AuthServer extends IOApp {
   override def run(args: List[String]): IO[ExitCode] = {
     implicit val ioL: Id[Logging[IO]] = Logging.Make.plain[IO].byName(getClass.getCanonicalName)
 
-    BlazeServerBuilder[IO](logicScheduler)
+    BlazeServerBuilder[IO]
+      .withExecutionContext(logicScheduler)
       .bindHttp(9091, "0.0.0.0")
       .withHttpApp(controller.routes.orNotFound)
       .resource

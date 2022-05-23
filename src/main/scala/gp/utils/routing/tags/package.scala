@@ -13,8 +13,16 @@ package object tags {
 
   object RouteTag {
 
+    case object Base extends RouteTag {
+      override def name: String = ""
+    }
+
     case object Auth extends RouteTag {
       override def name: String = "auth"
+    }
+
+    case object Tables extends RouteTag {
+      override def name: String = "tables"
     }
 
   }
