@@ -5,13 +5,15 @@ import io.circe.syntax.EncoderOps
 import io.circe.{DecodingFailure, Json}
 import io.scalaland.chimney.dsl._
 
+import java.util.UUID
+
 package object formats {
 
   case class StorageTable(
-    id: String,
+    id: UUID,
     name: String,
     columns: Json,
-    createdBy: String
+    createdBy: UUID
   ) {
     def asTable: Either[DecodingFailure, Table] =
       columns

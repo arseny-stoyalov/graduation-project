@@ -4,7 +4,7 @@ import gp.config.JWTConfig
 import pureconfig.ConfigSource
 import pureconfig.generic.auto._
 
-case class AuthNodeConfig(jwt: JWTConfig)
+case class AuthNodeConfig(port: Int, jwt: JWTConfig)
 
 object AuthNodeConfig {
 

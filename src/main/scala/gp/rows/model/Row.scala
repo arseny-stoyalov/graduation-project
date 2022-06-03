@@ -2,7 +2,7 @@ package gp.rows.model
 
 import io.circe.Json
 import io.circe.generic.JsonCodec
-import gp.utils.formats.DateFormats._
+import gp.utils.formats.json.DateFormats._
 
 import java.util.Date
 

@@ -1,12 +1,18 @@
 package gp
 
-import gp.utils.routing.errors.ApiErrorLike
+import gp.utils.routing.errors.{ApiError, ApiErrorLike}
 
 package object tables {
 
   object errors {
 
-    trait TableError extends ApiErrorLike
+    sealed trait TableError extends ApiErrorLike
+
+    object TableError {
+      case object NotFound extends TableError {
+        override def asApiError: ApiError = ApiError.NotFound()
+      }
+    }
 
   }
 

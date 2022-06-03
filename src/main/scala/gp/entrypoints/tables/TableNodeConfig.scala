@@ -1,10 +1,10 @@
 package gp.entrypoints.tables
 
-import gp.config.PostgresConfig
+import gp.config.{JWTConfig, PostgresConfig}
 import pureconfig.generic.auto._
 import pureconfig.ConfigSource
 
-case class TableNodeConfig(postgres: PostgresConfig)
+case class TableNodeConfig(port: Int, postgres: PostgresConfig, jwt: JWTConfig)
 
 object TableNodeConfig {
 

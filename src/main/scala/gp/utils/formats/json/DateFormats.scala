@@ -1,7 +1,7 @@
-package gp.utils.formats
+package gp.utils.formats.json
 
-import io.circe.{Decoder, Encoder}
 import cats.syntax.either._
+import io.circe.{Decoder, Encoder}
 
 import java.text.SimpleDateFormat
 import java.util.{Date, TimeZone}

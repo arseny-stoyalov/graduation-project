@@ -25,7 +25,7 @@ private object AuthServer extends IOApp {
 
     BlazeServerBuilder[IO]
       .withExecutionContext(logicScheduler)
-      .bindHttp(9091, "0.0.0.0")
+      .bindHttp(config.port, "0.0.0.0")
       .withHttpApp(controller.routes.orNotFound)
       .resource
       .use(_ => IO.never)
