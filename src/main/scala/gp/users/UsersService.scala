@@ -20,7 +20,7 @@ object UsersService {
 
     override def get(id: String): IO[Option[User]] = usersRef.flatMap(ref => ref.get.map(_.get(id)))
     override def getByLogin(login: String): IO[Option[User]] =
-      usersRef.flatMap(_.get.map(_.values.find(_.login == login)))
+      usersRef.flatMap(_.get.map(_.values.find(_.name == login)))
 
     override def put(id: String, user: User): IO[User] = usersRef.map(_.update(users => users + (id -> user))).as(user)
 

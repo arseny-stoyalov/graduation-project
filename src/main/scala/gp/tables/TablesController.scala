@@ -25,7 +25,7 @@ class TablesController[F[_]: Async: Monad](tablesService: TablesService[F])(impl
       .in(path[String]("id"))
       .out(jsonBody[Option[Table]])
 
-    val logic: AuthLogic[F, User, String, Option[Table]] = _ => id =>  EitherT(tablesService.getTable(id).map(_.asRight[TableError]))
+    val logic: AuthLogic[F, User, String, Option[Table]] = _ => id =>  EitherT(tablesService.get(id).map(_.asRight[TableError]))
 
     new UserAuthRoute(ep, logic, tag)
   }

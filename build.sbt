@@ -13,7 +13,7 @@ lazy val Version = new {
   val circe = "0.14.1"
   val tapir = "1.0.0-M6"
   val tofu = "0.10.8"
-  val skunk = "0.3.1"
+  val doobie = "1.0.0-RC1"
 }
 
 lazy val scalaDeps = Seq(
@@ -42,8 +42,11 @@ lazy val circeDeps = Seq(
   "io.circe" %% "circe-derivation" % "0.13.0-M4"
 )
 
-lazy val skunkDeps = Seq(
-  "org.tpolecat" %% "skunk-core" % Version.skunk
+lazy val doobieDeps = Seq(
+  "org.tpolecat" %% "doobie-core" % Version.doobie,
+  "org.tpolecat" %% "doobie-postgres" % Version.doobie,
+  "org.tpolecat" %% "doobie-specs2" % Version.doobie,
+  "org.tpolecat" %% "doobie-postgres-circe" % Version.doobie
 )
 
 lazy val monocleDeps = Seq(
@@ -69,6 +72,11 @@ lazy val tofuDeps = Seq(
   "tf.tofu" %% "tofu-logging-derivation" % Version.tofu
 )
 
+lazy val enumeratumDeps = Seq(
+  "com.beachape" %% "enumeratum" % "1.7.0",
+  "com.beachape" %% "enumeratum-circe" % "1.7.0"
+)
+
 lazy val configDeps = Seq(
   "com.github.pureconfig" %% "pureconfig" % "0.17.1"
 )
@@ -81,8 +89,9 @@ libraryDependencies ++=
     catsDeps ++
     circeDeps ++
     tapirDeps ++
-    skunkDeps ++
+    doobieDeps ++
     monocleDeps ++
+    enumeratumDeps ++
     tofuDeps ++
     configDeps) ++
     Seq(

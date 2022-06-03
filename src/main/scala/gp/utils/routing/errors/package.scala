@@ -16,7 +16,7 @@ package object errors {
     case class Unauthorized(msg: String) extends ApiError
 
     @JsonCodec
-    case class UnprocessableEntity() extends ApiError
+    case class UnprocessableEntity(msg: String) extends ApiError
 
     @JsonCodec
     case class NotFound() extends ApiError

@@ -3,10 +3,16 @@ package gp.tables
 import cats.Monad
 import gp.tables.model.Table
 
-class TablesService[F[_]](implicit F: Monad[F]) {
+//todo search with pagination
+class TablesService[F[_]](storage: TablesStorage[F])(implicit F: Monad[F]) {
 
-  def createTable(): F[Table] = F.pure(Table(""))
+  def init(): F[Unit] = storage.create()
 
-  def getTable(id: String): F[Option[Table]] = F.pure(None)
+  def get(id: String): F[Option[Table]] = storage.get(id)
+
+  //todo take external model, generate id
+  def add(table: Table) = storage.insert(table)
+
+  def delete(ids: List[String]) = storage.delete(ids)
 
 }

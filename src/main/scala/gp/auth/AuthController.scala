@@ -26,7 +26,7 @@ class AuthController[F[_]](implicit as: AuthService[F], F: Async[F] with MonadEr
         .out(stringBody)
 
     val logic: AuthLogic[F, User, Unit, String] =
-      u => _ => EitherT.fromEither[F](s"Hello, ${u.login}".asRight[ApiErrorLike])
+      u => _ => EitherT.fromEither[F](s"Hello, ${u.name}".asRight[ApiErrorLike])
 
     new UserAuthRoute[F, Unit, String](ep, logic, tag)
   }
