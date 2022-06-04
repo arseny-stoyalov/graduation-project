@@ -29,3 +29,7 @@ dependencies:
     condition: yugabyte.enabled
     repository: "https://charts.yugabyte.com"
     version: "2.13.1"
+  - name: "kafka"
+    condition: kafka.enabled
+    repository: "https://charts.bitnami.com/bitnami"
+    version: "17.1.0"

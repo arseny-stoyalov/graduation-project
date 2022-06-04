@@ -25,9 +25,8 @@ trait RowActionConsumer[F[_]] {
 
 object RowActionConsumer extends LoggingCompanion[RowActionConsumer] {
 
-  class Kafka(topic: KafkaTopic, tablesService: TablesService[IO], rowService: RowService[IO])(implicit
-    ioEC: ExecutionContext,
-    L: RowActionConsumer.Log[IO]
+  class Kafka(topic: KafkaTopic, tablesService: TablesService[IO], rowService: RowService[IO], ioEC: ExecutionContext)(
+    implicit L: RowActionConsumer.Log[IO]
   ) extends RowActionConsumer[IO] {
 
     override def start: IO[Unit] =
@@ -86,7 +85,7 @@ object RowActionConsumer extends LoggingCompanion[RowActionConsumer] {
         .map(_.fold(identity, identity) -> ())
         .groupWithin(500, 1.millisecond)
         .map(_.toList)
-        .batchedCommit(m => debug"$m", m => warn"$m")
+        .batchedCommit(m => debug"$m", m => warn"$m")(ioEC)
 
     private lazy val consumerSettings = ConsumerSettings[IO, Unit, Array[Byte]]
       .withBootstrapServers(topic.bootstrapServers.mkString(","))

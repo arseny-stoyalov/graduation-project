@@ -1,7 +1,7 @@
 package gp.tables.model
 
 import gp.columns.model.ColumnDescription
-import io.circe.syntax.EncoderOps
+import io.circe.syntax._
 import io.circe.{DecodingFailure, Json}
 import io.scalaland.chimney.dsl._
 

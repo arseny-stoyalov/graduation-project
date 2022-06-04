@@ -10,11 +10,12 @@ profiles:
     deploy:
       helm:
         releases:
-          - name: gp-yugabyte
-            namespace: yugabyte
+          - name: gp
             chartPath: deployment/gp-stack
             overrides:
               gp:
                 enabled: false
+              kafka:
+                advertisedListeners: "INTERNAL://$(MY_POD_NAME).gp-kafka-headless.default.svc.cluster.local:9093,CLIENT://localhost:9092"
             imageStrategy:
               helm: {}

@@ -13,6 +13,17 @@ package object rows {
 
   object errors {
 
+    sealed trait RowError extends ApiErrorLike
+
+    object RowError {
+
+      case object NotFound extends RowError {
+        override def asApiError: ApiError = ApiError.NotFound()
+      }
+
+    }
+
+    //todo TableError
     sealed trait InstanceError extends ApiErrorLike
 
     object InstanceError {

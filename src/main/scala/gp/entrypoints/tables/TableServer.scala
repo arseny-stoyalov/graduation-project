@@ -4,10 +4,13 @@ import cats.Id
 import cats.effect.{ExitCode, IO, IOApp}
 import doobie._
 import gp.auth.AuthService
-import gp.entrypoints.logicScheduler
+import gp.entrypoints.{ioScheduler, logicScheduler}
+import gp.rows.queue.{RowActionConsumer, RowActionProducer}
+import gp.rows.{RowService, RowStorage}
 import gp.tables.{TablesService, TablesStorage}
 import gp.users.UsersService
 import gp.utils.catseffect._
+import gp.utils.kafka.KafkaTopic
 import org.http4s.blaze.server.BlazeServerBuilder
 import tofu.logging.Logging
 import tofu.syntax.logging._
@@ -27,26 +30,38 @@ private object TableServer extends IOApp {
   val userService = new UsersService.InMemory
   implicit val authService: AuthService[IO] = new AuthService[IO](config.jwt, userService)
 
+  //rows
+  val rowActionTopic: KafkaTopic = KafkaTopic("row-actions", List(config.bootstrapServer))
+
+  val rowActionProducer = new RowActionProducer.Kafka(rowActionTopic)
+  val rowStorage = new RowStorage.Postgres[IO]()
+  val rowService = new RowService[IO](rowStorage, rowActionProducer)
+
   //tables
   val tablesStorage = new TablesStorage.Postgres[IO]()
-  val tablesService = new TablesService[IO](tablesStorage)
+  val tablesService = new TablesService[IO](tablesStorage, rowService)
 
-  val controller: TableNodeController[IO] = new TableNodeController[IO](tablesService)
+  //rows consumer
+  val rowActionConsumer = new RowActionConsumer.Kafka(rowActionTopic, tablesService, rowService, ioScheduler)
+
+  val controller: TableNodeController[IO] = new TableNodeController[IO](tablesService, rowService)
 
   override def run(args: List[String]): IO[ExitCode] = {
     implicit val ioL: Id[Logging[IO]] = Logging.Make.plain[IO].byName(getClass.getCanonicalName)
 
     tablesService.init() >>
-    BlazeServerBuilder[IO]
-      .withExecutionContext(logicScheduler)
-      .bindHttp(config.port, "0.0.0.0")
-      .withHttpApp(controller.routes.orNotFound)
-      .resource
-      .use(_ => IO.never)
-      .as(ExitCode.Success)
-      .handleErrorWith { e =>
-        errorCause"failed start role process" (e).as(ExitCode.Error)
-      }
+      rowActionTopic.create >>
+      rowActionConsumer.start >>
+      BlazeServerBuilder[IO]
+        .withExecutionContext(logicScheduler)
+        .bindHttp(config.port, "localhost")
+        .withHttpApp(controller.routes.orNotFound)
+        .resource
+        .use(_ => IO.never)
+        .as(ExitCode.Success)
+        .handleErrorWith { e =>
+          errorCause"failed start role process" (e).as(ExitCode.Error)
+        }
 
   }
 

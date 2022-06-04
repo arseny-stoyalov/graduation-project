@@ -14,6 +14,8 @@ import gp.tables.model.formats.StorageTable
 import tofu.logging.LoggingCompanion
 import tofu.syntax.logging._
 
+import java.util.UUID
+
 trait TablesStorage[F[_]] {
 
   def create(): F[Unit]
@@ -44,8 +46,9 @@ object TablesStorage extends LoggingCompanion[TablesStorage] {
           case Right(_) => info"Tables relation created"
         }
 
+    //todo handle uuid cast exceptions
     override def get(id: String): F[Option[Table]] =
-      (fr"select * from" ++ tableNameFragment ++ fr"where id = $id")
+      (fr"select * from" ++ tableNameFragment ++ fr"where id = $id::uuid")
         .query[StorageTable]
         .option
         .map(_.flatMap(_.asTable.toOption)) //todo error log

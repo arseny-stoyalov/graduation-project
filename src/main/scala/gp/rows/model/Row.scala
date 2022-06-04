@@ -1,15 +1,15 @@
 package gp.rows.model
 
+import gp.utils.formats.json.DateFormats._
 import io.circe.Json
 import io.circe.generic.JsonCodec
-import gp.utils.formats.json.DateFormats._
 
-import java.util.Date
+import java.util.{Date, UUID}
 
 @JsonCodec
 case class Row(
-  id: String,
+  id: UUID,
   entity: Json,
   created: Date,
-  createdBy: String
+  createdBy: UUID
 )

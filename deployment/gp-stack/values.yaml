@@ -1,3 +1,6 @@
+gp:
+  enabled: true
+
 yugabyte:
   enabled: true
   enableLoadBalancer: false
@@ -23,5 +26,11 @@ yugabyte:
     master: 1
     tserver: 1
 
-gp:
+kafka:
   enabled: true
+  persistence:
+    enabled: false
+  zookeeper:
+    enabled: true
+    persistence:
+      enabled: false

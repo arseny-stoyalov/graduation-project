@@ -14,7 +14,7 @@ class AuthNodeController[F[_]](implicit as: AuthService[F], F: Async[F] with Mon
 
   private val r: Routes[F] = authRoutes
 
-  private val doc = new SwaggerHttp4s(r.doc, List("auth", "docs")).routes[F]
+  private val doc = new SwaggerHttp4s(r.doc).routes[F]
 
   def routes: HttpRoutes[F] = doc <+> r.http4s
 
