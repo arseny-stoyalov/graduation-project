@@ -21,6 +21,10 @@ package object tags {
       override def name: String = "auth"
     }
 
+    case object Services extends RouteTag {
+      override def name: String = "services"
+    }
+
     case object Tables extends RouteTag {
       override def name: String = "tables"
     }

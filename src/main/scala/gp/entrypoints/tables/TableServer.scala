@@ -60,6 +60,7 @@ private object TableServer extends IOApp {
     implicit val ioL: Id[Logging[IO]] = Logging.Make.plain[IO].byName(getClass.getCanonicalName)
 
     tablesService.init() >>
+      servicesService.init() >>
       rowActionTopic.create >>
       rowActionConsumer.start >>
       BlazeServerBuilder[IO]

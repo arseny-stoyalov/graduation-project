@@ -11,7 +11,7 @@ package object formats {
     case class InputService(
       name: String
     ) {
-      def toService: Service =
+      def asService: Service =
         this
           .into[Service]
           .withFieldConst(_.id, null)

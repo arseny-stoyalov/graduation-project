@@ -1,10 +1,10 @@
 package gp.entrypoints.auth
 
-import gp.config.JWTConfig
+import gp.config.{JWTConfig, PostgresConfig}
 import pureconfig.ConfigSource
 import pureconfig.generic.auto._
 
-case class AuthNodeConfig(port: Int, jwt: JWTConfig)
+case class AuthNodeConfig(port: Int, jwt: JWTConfig, postgres: PostgresConfig)
 
 object AuthNodeConfig {
 

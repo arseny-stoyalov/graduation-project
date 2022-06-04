@@ -43,8 +43,8 @@ object ServicesStorage extends LoggingCompanion[ServicesStorage] {
              )""").update.run.attemptSql
         .transact(transactor)
         .flatMap {
-          case Left(_) => info"Tables relation not created"
-          case Right(_) => info"Tables relation created"
+          case Left(_) => info"Services relation not created"
+          case Right(_) => info"Services relation created"
         }
 
     override def get(id: UUID, userId: UUID): F[Option[Service]] =

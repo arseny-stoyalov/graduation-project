@@ -23,7 +23,8 @@ class ServicesService[F[_]: Monad](storage: ServicesStorage[F]) {
       .getByApiKey(apiKey)
       .map(_.toRight(ServiceError.NotFound))
 
-  def search(size: Option[Int], offset: Option[Int])(implicit user: User): F[List[Service]] = storage.search(size, offset, user.id)
+  def search(size: Option[Int], offset: Option[Int])(implicit user: User): F[List[Service]] =
+    storage.search(size, offset, user.id)
 
   def add(service: Service)(implicit user: User): F[Service] = {
 
@@ -39,12 +40,15 @@ class ServicesService[F[_]: Monad](storage: ServicesStorage[F]) {
 
   def delete(id: UUID)(implicit user: User): F[Unit] = storage.delete(id, user.id)
 
-  def updateApiKey(id: UUID)(implicit user: User): F[Either[ServiceError, Unit]] =
+  def updateApiKey(id: UUID)(implicit user: User): F[Either[ServiceError, Service]] =
     get(id)
       .flatMap { op =>
         OptionT
           .fromOption[F](op)
-          .semiflatMap(s => storage.update(s.withApiKey(generateApiKey)))
+          .semiflatMap { s =>
+            val updated = s.withApiKey(generateApiKey)
+            storage.update(updated).as(updated)
+          }
           .toRight(ServiceError.NotFound: ServiceError)
           .value
       }
