@@ -4,8 +4,14 @@ import cats.MonadError
 import cats.data.EitherT
 import cats.effect.kernel.Async
 import cats.syntax.semigroupk._
-import gp.auth.AuthService
-import gp.auth.AuthService.JWT
+import cats.syntax.functor._
+import cats.syntax.either._
+import gp.auth.UserAuthService
+import gp.auth.UserAuthService.JWT
+import gp.auth.model.AuthModel
+import gp.services.ServicesService
+import gp.services.ServicesService.ApiKey
+import gp.services.model.Service
 import gp.users.model.User
 import gp.utils.routing.tags.RouteTag
 import gp.utils.routing.dsl.errors.unauthorized
@@ -67,15 +73,15 @@ package object dsl {
     override def prependPath(path: String): Route[F, I, O] = new Route[F, I, O](ep.prependIn(path), logic, rc)
   }
 
-  class UserAuthRoute[F[_], I, O](
+  class UserAuthedRoute[F[_], I, O](
     ep: Endpoint[Unit, I, Unit, O, Any],
     logic: AuthLogic[F, User, I, O],
     override val rc: RouteTag
-  )(implicit protected val as: AuthService[F], F: Async[F] with MonadError[F, Throwable])
+  )(implicit protected val as: UserAuthService[F], F: Async[F] with MonadError[F, Throwable])
       extends RouteBase
       with HasRouteClass {
 
-    override type RouteType = UserAuthRoute[F, I, O]
+    override type RouteType = UserAuthedRoute[F, I, O]
 
     override def e: ServerEndpoint[Any, F] =
       ep
@@ -86,14 +92,44 @@ package object dsl {
         .tags(rc.tags)
         .serverLogic(token => i => logic(token)(i).leftMap(_.asApiError).value)
 
-    override def prependPath(path: String): UserAuthRoute[F, I, O] =
-      new UserAuthRoute[F, I, O](ep.prependIn(path), logic, rc)
+    override def prependPath(path: String): UserAuthedRoute[F, I, O] =
+      new UserAuthedRoute[F, I, O](ep.prependIn(path), logic, rc)
 
     private lazy val authedEndpoint: PartialServerEndpoint[JWT, User, Unit, ApiError, Unit, Any, F] =
       endpoint
         .securityIn(auth.apiKey(header[JWT]("token")))
         .errorOut(oneOf[ApiError](unauthorized))
         .serverSecurityLogic[User, F](token => as.getUserFromToken(token).leftMap(_.asApiError).value)
+
+  }
+
+  class ServiceAuthedRoute[F[_], I, O](
+    ep: Endpoint[Unit, I, Unit, O, Any],
+    logic: AuthLogic[F, Service, I, O],
+    override val rc: RouteTag
+  )(implicit protected val ss: ServicesService[F], F: Async[F] with MonadError[F, Throwable])
+      extends RouteBase
+      with HasRouteClass {
+
+    override type RouteType = ServiceAuthedRoute[F, I, O]
+
+    override def e: ServerEndpoint[Any, F] =
+      ep
+        .securityIn(authedEndpoint.securityInput)
+        .prependErrorOut(authedEndpoint.errorOutput)
+        .serverSecurityLogic(authedEndpoint.securityLogic(monadError(F)))
+        .prependIn(rc.input)
+        .tags(rc.tags)
+        .serverLogic(token => i => logic(token)(i).leftMap(_.asApiError).value)
+
+    override def prependPath(path: String): ServiceAuthedRoute[F, I, O] =
+      new ServiceAuthedRoute[F, I, O](ep.prependIn(path), logic, rc)
+
+    private lazy val authedEndpoint: PartialServerEndpoint[ApiKey, Service, Unit, ApiError, Unit, Any, F] =
+      endpoint
+        .securityIn(auth.apiKey(header[ApiKey]("apikey")))
+        .errorOut(oneOf[ApiError](unauthorized))
+        .serverSecurityLogic[Service, F](apikey => ss.getByApiKey(apikey).map(_.leftMap(_.asApiError)))
 
   }
 
@@ -113,5 +149,5 @@ package object dsl {
   }
 
   type Logic[F[_], I, O] = I => EitherT[F, _ <: ApiErrorLike, O]
-  type AuthLogic[F[_], A, I, O] = A => I => EitherT[F, _ <: ApiErrorLike, O]
+  type AuthLogic[F[_], A <: AuthModel, I, O] = A => I => EitherT[F, _ <: ApiErrorLike, O]
 }

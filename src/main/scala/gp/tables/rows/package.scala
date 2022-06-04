@@ -1,7 +1,7 @@
 package gp.tables
 
 import enumeratum.{Enum, EnumEntry}
-import gp.tables.rows.model.Row
+import gp.services.model.Service
 import gp.utils.routing.errors.{ApiError, ApiErrorLike}
 import io.circe.{Decoder, Encoder, HCursor, Json}
 import io.circe.generic.JsonCodec
@@ -24,25 +24,21 @@ package object rows {
 
     }
 
-    //todo TableError
     sealed trait InstanceError extends ApiErrorLike
 
     object InstanceError {
 
+      case class ColumnMissing(id: String) extends InstanceError {
+        override def asApiError: ApiError = ApiError.UnprocessableEntity(s"Missing column $id")
+      }
+
+      case class IncompatibleTypes(columnId: String, expectedType: String) extends InstanceError {
+        override def asApiError: ApiError =
+          ApiError.UnprocessableEntity(s"Column $columnId should be of type $expectedType")
+      }
+
       case object NotFound extends InstanceError {
         override def asApiError: ApiError = ApiError.NotFound()
-      }
-
-      case class CreateFail(msg: String) extends InstanceError {
-        override def asApiError: ApiError = ApiError.UnprocessableEntity(msg)
-      }
-
-      case class DropFail(msg: String) extends InstanceError {
-        override def asApiError: ApiError = ApiError.UnprocessableEntity(msg)
-      }
-
-      case class IncompatibleTypes() extends InstanceError {
-        override def asApiError: ApiError = ApiError.UnprocessableEntity("") //todo type errors
       }
 
     }
@@ -55,7 +51,7 @@ package object rows {
 
   private[rows] object Action extends Enum[Action] {
     @JsonCodec
-    case class Write(tableId: UUID, row: Row) extends Action {
+    case class Write(tableId: UUID, row: Map[String, Json], sentBy: Service) extends Action {
       override val entryName: String = "Write"
     }
 

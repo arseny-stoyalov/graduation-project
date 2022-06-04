@@ -50,23 +50,23 @@ object RowActionConsumer extends LoggingCompanion[RowActionConsumer] {
         }
         .mapValidAsync(r =>
           r.action match {
-            case w: Action.Write =>
+            case Action.Write(tableId, untyped, sentBy) =>
               logic
-                .process(w.tableId, w.row)
+                .process(tableId, untyped)(sentBy)
                 .flatMap { x =>
                   x.fold(
                     err => warn"Row processing finished with ${err.toString}",
-                    r => write(w.tableId, r)
+                    r => write(tableId, r)
                   )
                 }
                 .as(r.kafkaRecord)
 
-            case d: Action.Delete =>
+            case Action.Delete(tableId, id) =>
               tablesService
-                .get(d.tableId)
+                .get(tableId)
                 .flatMap { x =>
                   x.fold(warn"Unable to delete a row, because table was not found")(_ =>
-                    rowService.directDelete(d.id, d.tableId).void
+                    rowService.directDelete(id, tableId).void
                   )
                 }
                 .as(r.kafkaRecord)
@@ -95,9 +95,8 @@ object RowActionConsumer extends LoggingCompanion[RowActionConsumer] {
         .flatMap(_.as[Action])
         .leftMap(_.fillInStackTrace())
 
-    //todo row entity type check + sane return type + meta data generation + external model
-    private def write(tableId: UUID, row: Row): IO[Either[InstanceError, Int]] =
-      rowService.directPut(row, tableId).map(_.asRight[InstanceError])
+    private def write(tableId: UUID, row: Row): IO[Unit] =
+      rowService.directPut(row, tableId).void
 
   }
 

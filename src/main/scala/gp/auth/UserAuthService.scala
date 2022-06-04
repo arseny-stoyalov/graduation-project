@@ -6,7 +6,7 @@ import cats.data.EitherT
 import gp.users.model.User
 import cats.syntax.either._
 import cats.syntax.functor._
-import gp.auth.AuthService.JWT
+import gp.auth.UserAuthService.JWT
 import gp.auth.model.AuthModel.UserToken
 import gp.config.JWTConfig
 import gp.users.UsersService
@@ -18,7 +18,8 @@ import pdi.jwt.{JwtAlgorithm, JwtCirce, JwtClaim}
 import java.time.Instant
 import java.util.UUID
 
-class AuthService[F[_]: Monad](config: JWTConfig, usersService: UsersService[F]) {
+//todo Validating tokens/apikeys should be done in a separate service
+class UserAuthService[F[_]: Monad](config: JWTConfig, usersService: UsersService[F]) {
 
   private val jwtAlg = JwtAlgorithm.HS256
 
@@ -64,8 +65,6 @@ class AuthService[F[_]: Monad](config: JWTConfig, usersService: UsersService[F])
 
 }
 
-object AuthService {
-
+object UserAuthService {
   type JWT = String
-
 }

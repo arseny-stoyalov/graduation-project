@@ -1,5 +1,5 @@
 package gp.services
 
-class ServicesController {
+class ServicesController[F[_]] {
 
 }

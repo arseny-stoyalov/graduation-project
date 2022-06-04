@@ -2,15 +2,17 @@ package gp.tables.rows.queue
 
 import cats.effect.IO
 import fs2.kafka._
+import gp.services.model.Service
 import gp.tables.rows.Action
 import gp.tables.rows.model.Row
 import gp.utils.kafka.KafkaTopic
+import io.circe.Json
 
 import java.util.UUID
 
 trait RowActionProducer[F[_]] {
-  def put(row: Row, tableId: UUID): F[Unit] = {
-    val action = Action.Write(tableId, row).toBytes
+  def put(row: Map[String, Json], tableId: UUID)(implicit service: Service): F[Unit] = {
+    val action = Action.Write(tableId, row, service).toBytes
     send(action)
   }
 

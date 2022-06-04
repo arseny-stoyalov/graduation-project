@@ -5,12 +5,12 @@ import cats.data.EitherT
 import cats.effect.kernel.Async
 import cats.syntax.either._
 import cats.syntax.functor._
-import gp.auth.AuthService
+import gp.auth.UserAuthService
 import gp.tables.errors.TableError
 import gp.tables.model.Table
 import gp.tables.model.formats.external.InputTable
 import gp.users.model.User
-import gp.utils.routing.dsl.{AuthLogic, Routes, UserAuthRoute}
+import gp.utils.routing.dsl.{AuthLogic, Routes, UserAuthedRoute}
 import gp.utils.routing.tags.RouteTag
 import sttp.model.StatusCode
 import sttp.tapir._
@@ -19,7 +19,7 @@ import sttp.tapir.json.circe.jsonBody
 
 import java.util.UUID
 
-class TablesController[F[_]: Async: Monad](tablesService: TablesService[F])(implicit as: AuthService[F]) {
+class TablesController[F[_]: Async: Monad](tablesService: TablesService[F])(implicit as: UserAuthService[F]) {
 
   private val tag = RouteTag.Tables
 
@@ -31,7 +31,7 @@ class TablesController[F[_]: Async: Monad](tablesService: TablesService[F])(impl
     val logic: AuthLogic[F, User, UUID, Table] = _ =>
       id => EitherT(tablesService.get(id).map(_.toRight(TableError.NotFound)))
 
-    new UserAuthRoute(ep, logic, tag)
+    new UserAuthedRoute(ep, logic, tag)
   }
 
   private val search = {
@@ -52,7 +52,7 @@ class TablesController[F[_]: Async: Monad](tablesService: TablesService[F])(impl
         )
     }
 
-    new UserAuthRoute(ep, logic, tag)
+    new UserAuthedRoute(ep, logic, tag)
   }
 
   private val delete = {
@@ -63,7 +63,7 @@ class TablesController[F[_]: Async: Monad](tablesService: TablesService[F])(impl
     val logic: AuthLogic[F, User, UUID, Unit] = _ =>
       id => EitherT(tablesService.delete(id).void.map(_.asRight[TableError]))
 
-    new UserAuthRoute(ep, logic, tag)
+    new UserAuthedRoute(ep, logic, tag)
   }
 
   private val add = {
@@ -74,7 +74,7 @@ class TablesController[F[_]: Async: Monad](tablesService: TablesService[F])(impl
     val logic: AuthLogic[F, User, InputTable, Table] = implicit user =>
       input => EitherT(tablesService.add(input.asTable).map(_.asRight[TableError]))
 
-    new UserAuthRoute(ep, logic, tag)
+    new UserAuthedRoute(ep, logic, tag)
   }
 
   val routes: Routes[F] = get ~> search ~> add ~> delete

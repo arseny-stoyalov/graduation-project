@@ -3,8 +3,9 @@ package gp.entrypoints.tables
 import cats.Id
 import cats.effect.{ExitCode, IO, IOApp}
 import doobie._
-import gp.auth.AuthService
+import gp.auth.UserAuthService
 import gp.entrypoints.{ioScheduler, logicScheduler}
+import gp.services.{ServicesService, ServicesStorage}
 import gp.tables.instances.InstanceHandler
 import gp.tables.rows.queue.RowActionProducer
 import gp.tables.rows.RowStorage
@@ -31,7 +32,10 @@ private object TableServer extends IOApp {
 
   //auth
   val userService = new UsersService.InMemory
-  implicit val authService: AuthService[IO] = new AuthService[IO](config.jwt, userService)
+  implicit val authService: UserAuthService[IO] = new UserAuthService[IO](config.jwt, userService)
+
+  val servicesStorage = new ServicesStorage.Postgres[IO]()
+  implicit val servicesService: ServicesService[IO] = new ServicesService[IO](servicesStorage)
 
   //instances
   val instancesHandler = new InstanceHandler.Postgres[IO]()

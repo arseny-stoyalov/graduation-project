@@ -3,12 +3,12 @@ package gp.entrypoints.auth
 import cats.MonadError
 import cats.effect.kernel.Async
 import cats.syntax.semigroupk._
-import gp.auth.{AuthController, AuthService}
+import gp.auth.{AuthController, UserAuthService}
 import gp.utils.routing.dsl._
 import org.http4s.HttpRoutes
 import sttp.tapir.swagger.http4s.SwaggerHttp4s
 
-class AuthNodeController[F[_]](implicit as: AuthService[F], F: Async[F] with MonadError[F, Throwable]) {
+class AuthNodeController[F[_]](implicit as: UserAuthService[F], F: Async[F] with MonadError[F, Throwable]) {
 
  private val authRoutes = new AuthController().routes
 

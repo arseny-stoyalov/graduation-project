@@ -2,7 +2,7 @@ package gp.entrypoints.auth
 
 import cats.Id
 import cats.effect.{ExitCode, IO, IOApp}
-import gp.auth.AuthService
+import gp.auth.UserAuthService
 import gp.entrypoints.logicScheduler
 import gp.users.UsersService
 import gp.utils.catseffect._
@@ -16,7 +16,7 @@ private object AuthServer extends IOApp {
 
   val userService = new UsersService.InMemory
 
-  implicit val authService: AuthService[IO] = new AuthService[IO](config.jwt, userService)
+  implicit val authService: UserAuthService[IO] = new UserAuthService[IO](config.jwt, userService)
 
   val controller = new AuthNodeController()
 

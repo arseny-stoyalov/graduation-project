@@ -15,7 +15,7 @@ import sttp.tapir._
 import sttp.tapir.generic.auto._
 import sttp.tapir.json.circe.jsonBody
 
-class AuthController[F[_]](implicit as: AuthService[F], F: Async[F] with MonadError[F, Throwable]) {
+class AuthController[F[_]](implicit as: UserAuthService[F], F: Async[F] with MonadError[F, Throwable]) {
 
   private val tag = RouteTag.Auth
 
@@ -28,7 +28,7 @@ class AuthController[F[_]](implicit as: AuthService[F], F: Async[F] with MonadEr
     val logic: AuthLogic[F, User, Unit, String] =
       u => _ => EitherT.fromEither[F](s"Hello, ${u.name}".asRight[ApiErrorLike])
 
-    new UserAuthRoute[F, Unit, String](ep, logic, tag)
+    new UserAuthedRoute[F, Unit, String](ep, logic, tag)
   }
 
   private val login = {
