@@ -1,12 +1,12 @@
-package gp.rows.queue
+package gp.tables.rows.queue
 
 import cats.effect.IO
 import cats.syntax.either._
 import fs2.Stream
 import fs2.kafka.{AutoOffsetReset, ConsumerSettings, KafkaConsumer}
-import gp.rows.{Action, RowService}
-import gp.rows.errors.InstanceError
-import gp.rows.model.Row
+import gp.tables.rows.{Action, RowService}
+import gp.tables.rows.errors.InstanceError
+import gp.tables.rows.model.Row
 import gp.tables.TablesService
 import gp.utils.catseffect._
 import gp.utils.kafka.implicits._
@@ -16,6 +16,7 @@ import tofu.logging.LoggingCompanion
 import tofu.syntax.location.logging._
 
 import java.nio.charset.StandardCharsets
+import java.util.UUID
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.DurationInt
 
@@ -65,18 +66,8 @@ object RowActionConsumer extends LoggingCompanion[RowActionConsumer] {
                 .get(d.tableId)
                 .flatMap { x =>
                   x.fold(warn"Unable to delete a row, because table was not found")(_ =>
-                    rowService.directDelete(d.ids, d.tableId).void
+                    rowService.directDelete(d.id, d.tableId).void
                   )
-                }
-                .as(r.kafkaRecord)
-
-            case e: Action.Erase =>
-              tablesService
-                .get(e.tableId)
-                .flatMap { x =>
-                  x.fold(warn"Unable to delete an unrepresented table")(_ =>
-                    rowService.directErase(e.tableId).void
-                  ) //todo handle error and delete table record with rows table via one transaction
                 }
                 .as(r.kafkaRecord)
 
@@ -104,8 +95,8 @@ object RowActionConsumer extends LoggingCompanion[RowActionConsumer] {
         .flatMap(_.as[Action])
         .leftMap(_.fillInStackTrace())
 
-    //todo row entity type check + sane return type
-    private def write(tableId: String, row: Row): IO[Either[InstanceError, Int]] =
+    //todo row entity type check + sane return type + meta data generation + external model
+    private def write(tableId: UUID, row: Row): IO[Either[InstanceError, Int]] =
       rowService.directPut(row, tableId).map(_.asRight[InstanceError])
 
   }

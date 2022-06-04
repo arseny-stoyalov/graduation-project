@@ -1,13 +1,14 @@
-package gp
+package gp.tables
 
 import enumeratum.{Enum, EnumEntry}
-import gp.rows.model.Row
+import gp.tables.rows.model.Row
 import gp.utils.routing.errors.{ApiError, ApiErrorLike}
 import io.circe.{Decoder, Encoder, HCursor, Json}
 import io.circe.generic.JsonCodec
 import io.circe.syntax._
 
 import java.nio.charset.StandardCharsets
+import java.util.UUID
 
 package object rows {
 
@@ -54,25 +55,19 @@ package object rows {
 
   private[rows] object Action extends Enum[Action] {
     @JsonCodec
-    case class Write(tableId: String, row: Row) extends Action {
+    case class Write(tableId: UUID, row: Row) extends Action {
       override val entryName: String = "Write"
     }
 
     @JsonCodec
-    case class Delete(tableId: String, ids: List[String]) extends Action {
+    case class Delete(tableId: UUID, id: UUID) extends Action {
       override val entryName: String = "Delete"
-    }
-
-    @JsonCodec
-    case class Erase(tableId: String) extends Action {
-      override val entryName: String = "Erase"
     }
 
     implicit val decoder: Decoder[Action] = (c: HCursor) =>
       c.get[String]("type").flatMap {
         case "Delete" => c.as[Delete]
         case "Write" => c.as[Write]
-        case "Erase" => c.as[Erase]
       }
 
     implicit val encoder: Encoder[Action] = (a: Action) => {
@@ -81,7 +76,6 @@ package object rows {
       val body = a match {
         case d: Delete => d.asJson
         case w: Write => w.asJson
-        case e: Erase => e.asJson
       }
 
       body.deepMerge(`type`)

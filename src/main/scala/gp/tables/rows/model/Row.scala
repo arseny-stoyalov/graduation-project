@@ -1,4 +1,4 @@
-package gp.rows.model
+package gp.tables.rows.model
 
 import gp.utils.formats.json.DateFormats._
 import io.circe.Json

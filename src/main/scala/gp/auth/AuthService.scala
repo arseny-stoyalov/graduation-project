@@ -16,6 +16,7 @@ import pdi.jwt.exceptions.JwtExpirationException
 import pdi.jwt.{JwtAlgorithm, JwtCirce, JwtClaim}
 
 import java.time.Instant
+import java.util.UUID
 
 class AuthService[F[_]: Monad](config: JWTConfig, usersService: UsersService[F]) {
 
@@ -33,7 +34,7 @@ class AuthService[F[_]: Monad](config: JWTConfig, usersService: UsersService[F])
     }
 
   def getUserFromToken(token: JWT): EitherT[F, AuthenticationError, User] = {
-    val userId: Either[AuthenticationError, String] = for {
+    val userId: Either[AuthenticationError, UUID] = for {
       claim <- JwtCirce
         .decode(token, config.secretKey, Seq(jwtAlg))
         .toEither

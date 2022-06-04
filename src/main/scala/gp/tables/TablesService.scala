@@ -1,31 +1,32 @@
 package gp.tables
 
-import cats.syntax.functor._
-import cats.syntax.flatMap._
 import cats.Monad
-import gp.rows.RowService
+import cats.syntax.functor._
+import gp.core.generators.{CreationMetaDataGenerator, IdGenerator}
 import gp.tables.TablesService.Log
+import gp.tables.instances.InstanceHandler
 import gp.tables.model.Table
+import gp.users.model.User
 import tofu.logging.LoggingCompanion
-import tofu.syntax.logging._
 
-//todo search with pagination
-class TablesService[F[_]](storage: TablesStorage[F], rowService: RowService[F])(implicit F: Monad[F], L: Log[F]) {
+import java.util.UUID
 
-  def init(): F[Unit] = storage.create()
+class TablesService[F[_]](storage: TablesStorage[F], handler: InstanceHandler[F])(implicit F: Monad[F], L: Log[F]) {
+
+  def init(): F[Unit] = storage.init()
 
   def search(size: Option[Int], offset: Option[Int]): F[List[Table]] = storage.search(size, offset)
 
-  def get(id: String): F[Option[Table]] = storage.get(id)
+  def get(id: UUID): F[Option[Table]] = storage.get(id)
 
-  //todo take external model, generate id, init instance table
-  def add(table: Table): F[Unit] = storage.insert(table) >>
-    rowService.init(table.id.toString).flatMap {
-      case Left(err) => warn"Table instance was not created ${err.toString}"
-      case _ => F.unit
-    }
+  def add(table: Table)(implicit user: User): F[Table] = {
+    val initialized = (IdGenerator.generate[Table] _ andThen CreationMetaDataGenerator.generate[Table])(table)
 
-  def delete(id: String): F[Int] = storage.delete(id)
+    handler.create(initialized)
+      .as(initialized)
+  }
+
+  def delete(id: UUID): F[Unit] = handler.delete(id)
 
 }
 

@@ -5,8 +5,11 @@ import cats.effect.{ExitCode, IO, IOApp}
 import doobie._
 import gp.auth.AuthService
 import gp.entrypoints.{ioScheduler, logicScheduler}
-import gp.rows.queue.{RowActionConsumer, RowActionProducer}
-import gp.rows.{RowService, RowStorage}
+import gp.tables.instances.InstanceHandler
+import gp.tables.rows.queue.RowActionProducer
+import gp.tables.rows.RowStorage
+import gp.tables.rows.{RowService, RowStorage}
+import gp.tables.rows.queue.{RowActionConsumer, RowActionProducer}
 import gp.tables.{TablesService, TablesStorage}
 import gp.users.UsersService
 import gp.utils.catseffect._
@@ -30,6 +33,9 @@ private object TableServer extends IOApp {
   val userService = new UsersService.InMemory
   implicit val authService: AuthService[IO] = new AuthService[IO](config.jwt, userService)
 
+  //instances
+  val instancesHandler = new InstanceHandler.Postgres[IO]()
+
   //rows
   val rowActionTopic: KafkaTopic = KafkaTopic("row-actions", List(config.bootstrapServer))
 
@@ -39,7 +45,7 @@ private object TableServer extends IOApp {
 
   //tables
   val tablesStorage = new TablesStorage.Postgres[IO]()
-  val tablesService = new TablesService[IO](tablesStorage, rowService)
+  val tablesService = new TablesService[IO](tablesStorage, instancesHandler)
 
   //rows consumer
   val rowActionConsumer = new RowActionConsumer.Kafka(rowActionTopic, tablesService, rowService, ioScheduler)

@@ -1,24 +1,21 @@
-package gp.rows.queue
+package gp.tables.rows.queue
 
 import cats.effect.IO
 import fs2.kafka._
-import gp.rows.Action
-import gp.rows.model.Row
+import gp.tables.rows.Action
+import gp.tables.rows.model.Row
 import gp.utils.kafka.KafkaTopic
 
+import java.util.UUID
+
 trait RowActionProducer[F[_]] {
-  def put(tableId: String, row: Row): F[Unit] = {
+  def put(row: Row, tableId: UUID): F[Unit] = {
     val action = Action.Write(tableId, row).toBytes
     send(action)
   }
 
-  def delete(tableId: String, ids: List[String]): F[Unit] = {
-    val action = Action.Delete(tableId, ids).toBytes
-    send(action)
-  }
-
-  def erase(tableId: String): F[Unit] = {
-    val action = Action.Erase(tableId).toBytes
+  def delete(id: UUID, tableId: UUID): F[Unit] = {
+    val action = Action.Delete(tableId, id).toBytes
     send(action)
   }
 

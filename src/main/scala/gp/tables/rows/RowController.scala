@@ -1,13 +1,13 @@
-package gp.rows
+package gp.tables.rows
 
 import cats.data.EitherT
 import cats.effect.Async
 import cats.syntax.either._
 import cats.syntax.functor._
 import gp.auth.AuthService
-import gp.rows.RowController.{RowId, TableId}
-import gp.rows.errors.RowError
-import gp.rows.model.Row
+import RowController.{RowId, TableId}
+import gp.tables.rows.errors.RowError
+import gp.tables.rows.model.Row
 import gp.users.model.User
 import gp.utils.routing.dsl.{AuthLogic, Routes, UserAuthRoute}
 import gp.utils.routing.tags.RouteTag
@@ -15,6 +15,8 @@ import sttp.model.StatusCode
 import sttp.tapir._
 import sttp.tapir.generic.auto._
 import sttp.tapir.json.circe._
+
+import java.util.UUID
 
 class RowController[F[_]: Async](rs: RowService[F])(implicit val as: AuthService[F]) {
 
@@ -63,7 +65,7 @@ class RowController[F[_]: Async](rs: RowService[F])(implicit val as: AuthService
       .out(statusCode(StatusCode.Accepted))
 
     val logic: AuthLogic[F, User, (TableId, RowId), Unit] = _ => { case (tableId, id) =>
-      EitherT(rs.delete(List(id), tableId).void.map(_.asRight[RowError]))
+      EitherT(rs.delete(id, tableId).void.map(_.asRight[RowError]))
     }
 
     new UserAuthRoute(ep, logic, tag)
@@ -88,7 +90,7 @@ class RowController[F[_]: Async](rs: RowService[F])(implicit val as: AuthService
 
 object RowController {
 
-  type TableId = String
-  type RowId = String
+  type TableId = UUID
+  type RowId = UUID
 
 }
