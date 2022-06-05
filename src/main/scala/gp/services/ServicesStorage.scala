@@ -54,7 +54,7 @@ object ServicesStorage extends LoggingCompanion[ServicesStorage] {
         .transact(transactor)
 
     override def getByApiKey(apiKey: String): F[Option[Service]] =
-      (fr"select * from" ++ tableNameFragment ++ fr"where apiKey = $apiKey::uuid")
+      (fr"select * from" ++ tableNameFragment ++ fr"where apiKey = $apiKey")
         .query[Service]
         .option
         .transact(transactor)
