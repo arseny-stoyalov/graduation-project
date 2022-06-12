@@ -12,6 +12,32 @@ imageCredentials:
   password: sillyness
   email: someone@host.com
 
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+  hosts:
+    - host: 'graduation-project.info'
+      paths:
+        #-------auth-------
+        - path: /auth
+          pathType: Prefix
+          service: auth
+          port: 9091
+        - path: /service
+          pathType: Prefix
+          service: auth
+          port: 9091
+        #-------tables-------
+        - path: /tables
+          pathType: Prefix
+          service: tables
+          port: 9091
+        - path: /instances
+          pathType: Prefix
+          service: tables
+          port: 9091
+
 backend:
   enabled: true
 

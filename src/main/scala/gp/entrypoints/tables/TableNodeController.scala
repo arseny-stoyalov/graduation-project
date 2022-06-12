@@ -2,6 +2,7 @@ package gp.entrypoints.tables
 
 import cats.effect.Async
 import cats.syntax.semigroupk._
+import gp.AliveRoute
 import gp.auth.UserAuthService
 import gp.services.ServicesService
 import gp.tables.rows.{RowController, RowService}
@@ -20,8 +21,8 @@ class TableNodeController[F[_]: Async](ts: TablesService[F], rs: RowService[F])(
 
   private val r: Routes[F] = tableRoutes ~> rowRoutes
 
-  private val doc = new SwaggerHttp4s(r.doc).routes[F]
+  private val doc = new SwaggerHttp4s(r.doc, List("tables", "docs")).routes[F]
 
-  val routes: HttpRoutes[F] = doc <+> r.http4s
+  val routes: HttpRoutes[F] = doc <+> r.http4s <+> AliveRoute.apply
 
 }
