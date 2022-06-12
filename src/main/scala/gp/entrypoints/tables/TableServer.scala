@@ -4,7 +4,6 @@ import cats.Id
 import cats.effect.{ExitCode, IO, IOApp}
 import doobie._
 import gp.auth.UserAuthService
-import gp.entrypoints.{ioScheduler, logicScheduler}
 import gp.services.{ServicesService, ServicesStorage}
 import gp.tables.instances.InstanceHandler
 import gp.tables.rows.queue.RowActionProducer
@@ -19,7 +18,9 @@ import org.http4s.blaze.server.BlazeServerBuilder
 import tofu.logging.Logging
 import tofu.syntax.logging._
 
-private object TableServer extends IOApp {
+import scala.concurrent.ExecutionContext
+
+class TableServer(logicScheduler: ExecutionContext, ioScheduler: ExecutionContext) {
 
   val config: TableNodeConfig = TableNodeConfig()
 
@@ -56,24 +57,16 @@ private object TableServer extends IOApp {
 
   val controller: TableNodeController[IO] = new TableNodeController[IO](tablesService, rowService)
 
-  override def run(args: List[String]): IO[ExitCode] = {
-    implicit val ioL: Id[Logging[IO]] = Logging.Make.plain[IO].byName(getClass.getCanonicalName)
-
+  def run: IO[Unit] =
     tablesService.init() >>
       servicesService.init() >>
       rowActionTopic.create >>
       rowActionConsumer.start >>
       BlazeServerBuilder[IO]
         .withExecutionContext(logicScheduler)
-        .bindHttp(config.port, "localhost")
+        .bindHttp(config.port, "0.0.0.0")
         .withHttpApp(controller.routes.orNotFound)
         .resource
         .use(_ => IO.never)
-        .as(ExitCode.Success)
-        .handleErrorWith { e =>
-          errorCause"failed start role process" (e).as(ExitCode.Error)
-        }
-
-  }
 
 }

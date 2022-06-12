@@ -1,5 +1,5 @@
 apiVersion: v2
-name: gp-stack
+name: gp
 description: A Helm chart for Kubernetes
 
 # A chart can be either an 'application' or a 'library' chart.
@@ -22,18 +22,3 @@ version: 0.1.0
 # follow Semantic Versioning. They should reflect the version the application is using.
 # It is recommended to use it with quotes.
 appVersion: "8.0"
-
-# Dependencies
-dependencies:
-  - name: "yugabyte"
-    condition: yugabyte.enabled
-    repository: "https://charts.yugabyte.com"
-    version: "2.13.1"
-  - name: "gp"
-    condition: gp.enabled
-    repository: "file://../gp"
-    version: "^0.1.0"
-  - name: "kafka"
-    condition: kafka.enabled
-    repository: "https://charts.bitnami.com/bitnami"
-    version: "17.1.0"

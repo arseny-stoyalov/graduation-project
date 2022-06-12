@@ -1,0 +1,19 @@
+{{- if and .Values.backend.enabled .Values.backend.auth.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "gp.fullname" . }}-auth
+  labels:
+{{ include "gp.labels" . | indent 4 }}
+    app.kubernetes.io/component: "auth"
+spec:
+  type: {{ .Values.backend.auth.service.type }}
+  ports:
+    - port: {{ .Values.backend.auth.service.httpPort }}
+      targetPort: {{ .Values.backend.auth.service.httpPort }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "gp.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: "auth"
+{{- end }}

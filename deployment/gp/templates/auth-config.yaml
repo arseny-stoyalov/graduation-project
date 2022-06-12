@@ -1,0 +1,21 @@
+{{- if and .Values.backend.enabled .Values.backend.auth.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "gp.fullname" . }}-auth-config
+data:
+  application.conf: |-
+    node="Auth"
+
+    port=9091
+  
+    jwt.secret-key="secret"
+    jwt.default-expire="3 hours"
+    
+    postgres.host="yb-tservers"
+    postgres.port=5433
+    postgres.database="gp_main"
+    postgres.user="gp_admin"
+    postgres.password="admin"
+
+{{- end }}

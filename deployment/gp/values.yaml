@@ -1,0 +1,64 @@
+# Default values for gp.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+nameOverride: ""
+fullnameOverride: ""
+
+imageCredentials:
+  enabled: false
+  registry: registry.io
+  username: someone
+  password: sillyness
+  email: someone@host.com
+
+backend:
+  enabled: true
+
+  image:
+    repository: ""
+    pullPolicy: IfNotPresent
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: ""
+
+  imagePullSecrets: []
+
+  auth:
+    enabled: true
+
+    replicas: 1
+
+    service:
+      type: ClusterIP
+      httpPort: 9091
+
+    resources:
+      limits:
+        cpu: 0.5
+      requests:
+        cpu: 0.1
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+
+    gcThreads: ""
+
+  tables:
+    enabled: true
+
+    replicas: 1
+
+    service:
+      type: ClusterIP
+      httpPort: 9091
+
+    resources:
+      limits:
+        cpu: 0.5
+      requests:
+        cpu: 0.1
+    nodeSelector: {}
+    tolerations: []
+    affinity: {}
+
+    gcThreads: ""

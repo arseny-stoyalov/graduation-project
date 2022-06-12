@@ -1,0 +1,23 @@
+{{- if and .Values.backend.enabled .Values.backend.tables.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "gp.fullname" . }}-tables-config
+data:
+  application.conf: |-
+    node="Tables"
+  
+    port=9091
+    
+    postgres.host="yb-tservers"
+    postgres.port=5433
+    postgres.database="gp_main"
+    postgres.user="gp_admin"
+    postgres.password="admin"
+    
+    jwt.secret-key="secret"
+    jwt.default-expire="3 hours"
+    
+    bootstrap-server="{{ .Release.Name }}-kafka:9092"
+
+{{- end }}

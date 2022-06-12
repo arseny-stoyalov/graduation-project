@@ -1,0 +1,19 @@
+{{- if and .Values.backend.enabled .Values.backend.tables.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "gp.fullname" . }}-tables
+  labels:
+{{ include "gp.labels" . | indent 4 }}
+    app.kubernetes.io/component: "tables"
+spec:
+  type: {{ .Values.backend.tables.service.type }}
+  ports:
+    - port: {{ .Values.backend.tables.service.httpPort }}
+      targetPort: {{ .Values.backend.tables.service.httpPort }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "gp.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: "tables"
+{{- end }}

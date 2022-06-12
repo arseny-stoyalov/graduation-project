@@ -19,3 +19,70 @@ profiles:
                 advertisedListeners: "INTERNAL://$(MY_POD_NAME).gp-kafka-headless.default.svc.cluster.local:9093,CLIENT://localhost:9092"
             imageStrategy:
               helm: {}
+  - name: tables
+    build:
+      artifacts:
+        - image: registry.io/gp/gp/backend
+          docker:
+            dockerfile: Dockerfile
+      local:
+        concurrency: 2
+    deploy:
+      helm:
+        releases:
+          - name: gp
+            chartPath: deployment/gp-stack
+            overrides:
+              gp:
+                backend:
+                  auth:
+                    enabled: false
+            artifactOverrides:
+              gp:
+                backend:
+                  image: registry.io/gp/gp/backend
+            imageStrategy:
+              helm: {}
+  - name: auth
+    build:
+      artifacts:
+          - image: registry.io/gp/gp/backend
+            docker:
+              dockerfile: Dockerfile
+      local:
+        concurrency: 2
+    deploy:
+      helm:
+        releases:
+          - name: gp
+            chartPath: deployment/gp-stack
+            overrides:
+              gp:
+                backend:
+                  tables:
+                    enabled: false
+            artifactOverrides:
+              gp:
+                backend:
+                  image: registry.io/gp/gp/backend
+            imageStrategy:
+              helm: {}
+  - name: full
+    build:
+      artifacts:
+          - image: registry.io/gp/gp/backend
+            docker:
+              dockerfile: Dockerfile
+      local:
+        concurrency: 2
+    deploy:
+      helm:
+        releases:
+          - name: gp
+            chartPath: deployment/gp-stack
+            artifactOverrides:
+              gp:
+                backend:
+                  image: registry.io/gp/gp/backend
+            imageStrategy:
+              helm: {}

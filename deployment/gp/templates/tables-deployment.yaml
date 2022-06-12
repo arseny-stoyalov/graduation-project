@@ -1,0 +1,89 @@
+{{- if and .Values.backend.enabled .Values.backend.tables.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "gp.fullname" . }}-tables
+  labels:
+{{ include "gp.labels" . | indent 4 }}
+    app.kubernetes.io/component: "tables"
+  {{- if .Values.gitlab }}
+  annotations:
+    app.gitlab.com/app: {{ .Values.gitlab.app }}
+    app.gitlab.com/env: {{ .Values.gitlab.env }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.backend.tables.replicas }}
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "gp.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: "tables"
+  template:
+    metadata:
+      labels:
+        {{- include "gp.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: "tables"
+        app: {{ include "gp.name" . }}
+        component: "tables"
+      {{- if .Values.gitlab }}
+      annotations:
+        app.gitlab.com/app: {{ .Values.gitlab.app }}
+        app.gitlab.com/env: {{ .Values.gitlab.env }}
+      {{- end }}
+    spec:
+    {{- with .Values.backend.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      containers:
+        - name: gp
+          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+          imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+          {{- if .Values.backend.tables.gcThreads }}
+          env:
+            - name: PAR_GC_THREADS
+              value: "{{ .Values.backend.tables.gcThreads }}"
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: 9091
+              protocol: TCP
+            - name: debug
+              containerPort: 5005
+          livenessProbe:
+            httpGet:
+              path: /alive
+              port: 9091
+            initialDelaySeconds: 180
+            periodSeconds: 60
+            timeoutSeconds: 15
+            failureThreshold: 5
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/gp/application.conf
+              subPath: application.conf
+              readOnly: true
+          resources:
+          {{- if .Values.backend.tables.resources }}
+            {{- toYaml .Values.backend.tables.resources | nindent 12 }}
+          {{- else }}
+            {{- "{}" | nindent 12 }}
+          {{- end }}
+      {{- with .Values.backend.tables.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.backend.tables.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.backend.tables.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: config-volume
+          configMap:
+            name: {{ include "gp.fullname" . }}-tables-config
+{{- end }}

@@ -1,3 +1,4 @@
+
 name := "graduation-project"
 
 version := "0.1"
@@ -99,8 +100,21 @@ libraryDependencies ++=
       "io.scalaland" %% "chimney" % "0.6.1",
       "com.github.jwt-scala" %% "jwt-circe" % "9.0.5",
       "com.github.t3hnar" %% "scala-bcrypt" % "4.3.0",
-      "com.github.fd4s" %% "fs2-kafka" % "2.5.0-M3"
+      "com.github.fd4s" %% "fs2-kafka" % "2.5.0-M3",
+      "com.yugabyte" % "jdbc-yugabytedb" % "42.3.4"
     )
+
+assembly / assemblyMergeStrategy := {
+  case PathList(ps @ _*) if ps.last endsWith "pom.properties" => MergeStrategy.first
+  case PathList("simulacrum", l @ _*) => MergeStrategy.first
+  case PathList(xs @ _*) if xs.last == "module-info.class" => MergeStrategy.first
+  case PathList("codegen-resources", l @ _*) => MergeStrategy.first
+  case PathList("META-INF", "io.netty.versions.properties") => MergeStrategy.first
+  case PathList("scala-collection-compat.properties") => MergeStrategy.first
+  case x => (assembly / assemblyMergeStrategy).value(x)
+}
+
+assembly / mainClass := Some("gp.Main")
 
 lazy val compilerThreads = {
   val threadsMax = 16

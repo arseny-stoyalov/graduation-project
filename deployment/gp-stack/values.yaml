@@ -25,6 +25,9 @@ yugabyte:
   replicas:
     master: 1
     tserver: 1
+  gflags:
+    tserver:
+      ysql_num_shards_per_tserver: 4
 
 kafka:
   enabled: true
