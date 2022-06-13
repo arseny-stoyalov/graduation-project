@@ -16,7 +16,7 @@ import tofu.logging.LoggingCompanion
 import tofu.syntax.location.logging._
 
 import java.nio.charset.StandardCharsets
-import java.util.UUID
+import java.util.{Date, UUID}
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.DurationInt
 
@@ -50,13 +50,13 @@ object RowActionConsumer extends LoggingCompanion[RowActionConsumer] {
         }
         .mapValidAsync(r =>
           r.action match {
-            case Action.Write(tableId, untyped, sentBy) =>
+            case Action.Write(tableId, untyped, sentBy, started) =>
               logic
                 .process(tableId, untyped)(sentBy)
                 .flatMap { x =>
                   x.fold(
                     err => warn"Row processing finished with ${err.toString}",
-                    r => write(tableId, r)
+                    r => processingTimeLogged(started)(write(tableId, r))
                   )
                 }
                 .as(r.kafkaRecord)
@@ -81,10 +81,10 @@ object RowActionConsumer extends LoggingCompanion[RowActionConsumer] {
     private lazy val consumerSettings = ConsumerSettings[IO, Unit, Array[Byte]]
       .withBootstrapServers(topic.bootstrapServers.mkString(","))
       .withGroupId("single-reader")
-      .withMaxPollRecords(100)
-      .withMaxPollInterval(1000.millis)
-      .withSessionTimeout(6001.millis)
-      .withMaxPrefetchBatches(54428800)
+      .withMaxPollRecords(500)
+      .withMaxPollInterval(6000.millis)
+      .withSessionTimeout(8000.millis)
+      .withMaxPrefetchBatches(100)
       .withAutoOffsetReset(AutoOffsetReset.Latest)
       .withEnableAutoCommit(false)
 
@@ -96,7 +96,13 @@ object RowActionConsumer extends LoggingCompanion[RowActionConsumer] {
         .leftMap(_.fillInStackTrace())
 
     private def write(tableId: UUID, row: Row): IO[Unit] =
-      rowService.directPut(row, tableId).void
+      rowService.directPut(row, tableId).void >> debug"Row process took "
+
+    private def processingTimeLogged(started: Long)(f: IO[Unit]) =
+      for {
+        res <- f
+        _ <- debug"Processing row took ${new Date().getTime - started} milliseconds"
+      } yield res
 
   }
 

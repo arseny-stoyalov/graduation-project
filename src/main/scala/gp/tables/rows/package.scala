@@ -51,7 +51,7 @@ package object rows {
 
   private[rows] object Action extends Enum[Action] {
     @JsonCodec
-    case class Write(tableId: UUID, row: Map[String, Json], sentBy: Service) extends Action {
+    case class Write(tableId: UUID, row: Map[String, Json], sentBy: Service, started: Long) extends Action {
       override val entryName: String = "Write"
     }
 

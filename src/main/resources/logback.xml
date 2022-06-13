@@ -12,11 +12,12 @@
         </encoder>
     </appender>
 
-    <root level="DEBUG">
+    <root level="ERROR">
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="FILE"/>
     </root>
     <logger name="org.apache.kafka" level="WARN" />
+    <logger name="gp" level="DEBUG" />
 
 
 </configuration>

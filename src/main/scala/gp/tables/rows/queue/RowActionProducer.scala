@@ -8,11 +8,11 @@ import gp.tables.rows.model.Row
 import gp.utils.kafka.KafkaTopic
 import io.circe.Json
 
-import java.util.UUID
+import java.util.{Date, UUID}
 
 trait RowActionProducer[F[_]] {
   def put(row: Map[String, Json], tableId: UUID)(implicit service: Service): F[Unit] = {
-    val action = Action.Write(tableId, row, service).toBytes
+    val action = Action.Write(tableId, row, service, new Date().getTime).toBytes
     send(action)
   }
 

@@ -19,18 +19,6 @@ class AuthController[F[_]](implicit as: UserAuthService[F], F: Async[F] with Mon
 
   private val tag = RouteTag.Auth
 
-  private val testAuth = "debug" ->: {
-    val ep =
-      endpoint.get
-        .in("greet")
-        .out(stringBody)
-
-    val logic: AuthLogic[F, User, Unit, String] =
-      u => _ => EitherT.fromEither[F](s"Hello, ${u.name}".asRight[ApiErrorLike])
-
-    new UserAuthedRoute[F, Unit, String](ep, logic, tag)
-  }
-
   private val login = {
     val ep =
       endpoint.post
@@ -47,7 +35,7 @@ class AuthController[F[_]](implicit as: UserAuthService[F], F: Async[F] with Mon
     new Route[F, (String, String), TokenCreatedResponse](ep, logic, tag)
   }
 
-  val routes: Routes[F] = testAuth ~> login
+  val routes: Routes[F] = login
 
 }
 

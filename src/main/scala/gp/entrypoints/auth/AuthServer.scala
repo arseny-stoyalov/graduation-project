@@ -21,7 +21,7 @@ class AuthServer(logicScheduler: ExecutionContext) {
     config.postgres.password
   )
 
-  val userService = new UsersService.InMemory
+  implicit val userService: UsersService[IO] = new UsersService.InMemory
   implicit val authService: UserAuthService[IO] = new UserAuthService[IO](config.jwt, userService)
 
   val servicesStorage = new ServicesStorage.Postgres[IO]()

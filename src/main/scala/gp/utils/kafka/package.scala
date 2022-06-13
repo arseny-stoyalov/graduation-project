@@ -15,7 +15,7 @@ package object kafka {
       cli.use(c =>
         c.topicsExist(name).flatMap { existing =>
           if (!existing.contains(name)) {
-            c.createTopic(name, 1, 1.toShort)
+            c.createTopic(name, 4, 1.toShort)
           } else IO.unit
         }
       )
