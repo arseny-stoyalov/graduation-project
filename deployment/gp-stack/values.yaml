@@ -8,11 +8,11 @@ yugabyte:
     tag: 2.13.1.0-b112
   storage:
     ephemeral: true
-#  authCredentials:
-#    ysql:
-#      user: "gp_admin"
-#      password: "admin"
-#      database: "gp_main"
+  authCredentials:
+    ysql:
+      user: "gp_admin"
+      password: "admin"
+      database: "gp_main"
   resource:
     master:
       requests:
@@ -30,7 +30,7 @@ yugabyte:
       ysql_num_shards_per_tserver: 4
 
 kafka:
-  enabled: false
+  enabled: true
   persistence:
     enabled: false
   zookeeper:

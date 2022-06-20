@@ -26,7 +26,7 @@ trait RowActionConsumer[F[_]] {
 
 object RowActionConsumer extends LoggingCompanion[RowActionConsumer] {
 
-  class Kafka(topic: KafkaTopic, tablesService: TablesService[IO], rowService: RowService[IO], ioEC: ExecutionContext)(
+  class Kafka(topic: KafkaTopic, groupId: Int, tablesService: TablesService[IO], rowService: RowService[IO], ioEC: ExecutionContext)(
     implicit L: RowActionConsumer.Log[IO]
   ) extends RowActionConsumer[IO] {
 
@@ -50,13 +50,14 @@ object RowActionConsumer extends LoggingCompanion[RowActionConsumer] {
         }
         .mapValidAsync(r =>
           r.action match {
-            case Action.Write(tableId, untyped, sentBy, started) =>
+            case Action.Write(tableId, untyped, sentBy, produced) =>
+              val started = new Date().getTime
               logic
                 .process(tableId, untyped)(sentBy)
                 .flatMap { x =>
                   x.fold(
                     err => warn"Row processing finished with ${err.toString}",
-                    r => processingTimeLogged(started)(write(tableId, r))
+                    r => processingTimeLogged(produced, started)(write(tableId, r))
                   )
                 }
                 .as(r.kafkaRecord)
@@ -80,11 +81,11 @@ object RowActionConsumer extends LoggingCompanion[RowActionConsumer] {
 
     private lazy val consumerSettings = ConsumerSettings[IO, Unit, Array[Byte]]
       .withBootstrapServers(topic.bootstrapServers.mkString(","))
-      .withGroupId("single-reader")
+      .withGroupId(s"reader$groupId")
       .withMaxPollRecords(500)
       .withMaxPollInterval(6000.millis)
       .withSessionTimeout(8000.millis)
-      .withMaxPrefetchBatches(100)
+      .withMaxPrefetchBatches(1000)
       .withAutoOffsetReset(AutoOffsetReset.Latest)
       .withEnableAutoCommit(false)
 
@@ -96,12 +97,12 @@ object RowActionConsumer extends LoggingCompanion[RowActionConsumer] {
         .leftMap(_.fillInStackTrace())
 
     private def write(tableId: UUID, row: Row): IO[Unit] =
-      rowService.directPut(row, tableId).void >> debug"Row process took "
+      rowService.directPut(row, tableId).void
 
-    private def processingTimeLogged(started: Long)(f: IO[Unit]) =
+    private def processingTimeLogged(produced: Long, started: Long)(f: IO[Unit]) =
       for {
         res <- f
-        _ <- debug"Processing row took ${new Date().getTime - started} milliseconds"
+        _ <- debug"Processing row took ${new Date().getTime - produced} ms total, ${new Date().getTime - started} ms in consumer"
       } yield res
 
   }

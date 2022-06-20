@@ -1,6 +1,6 @@
 package gp.entrypoints.tables
 
-import cats.Id
+import cats.syntax.traverse._
 import cats.effect.{ExitCode, IO, IOApp}
 import doobie._
 import gp.auth.UserAuthService
@@ -52,8 +52,10 @@ class TableServer(logicScheduler: ExecutionContext, ioScheduler: ExecutionContex
   val tablesStorage = new TablesStorage.Postgres[IO]()
   val tablesService = new TablesService[IO](tablesStorage, instancesHandler)
 
-  //rows consumer
-  val rowActionConsumer = new RowActionConsumer.Kafka(rowActionTopic, tablesService, rowService, ioScheduler)
+  //rows consumers
+  val rowActionConsumers: List[RowActionConsumer.Kafka] =
+    (for (i <- 1 to 6)
+      yield new RowActionConsumer.Kafka(rowActionTopic, i % 3, tablesService, rowService, ioScheduler)).toList
 
   val controller: TableNodeController[IO] = new TableNodeController[IO](tablesService, rowService)
 
@@ -61,7 +63,7 @@ class TableServer(logicScheduler: ExecutionContext, ioScheduler: ExecutionContex
     tablesService.init() >>
       servicesService.init() >>
       rowActionTopic.create >>
-      rowActionConsumer.start >>
+      rowActionConsumers.traverse(_.start) >>
       BlazeServerBuilder[IO]
         .withExecutionContext(logicScheduler)
         .bindHttp(config.port, "0.0.0.0")
